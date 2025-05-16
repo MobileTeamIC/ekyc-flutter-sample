@@ -93,6 +93,18 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             _buildButton(
+              title: 'Thực hiện OCR chỉ mặt trước',
+              onPressed: () async {
+                _navigateToLog(await _startEkycByNameMethod(methodName: "startEkycOcrFront"));
+              },
+            ),
+            _buildButton(
+              title: 'Thực hiện OCR chỉ mặt sau',
+              onPressed: () async {
+                _navigateToLog(await _startEkycByNameMethod(methodName: "startEkycOcrBack"));
+              },
+            ),
+            _buildButton(
               title: 'Thực hiện kiểm tra khuôn mặt',
               onPressed: () async {
                 _navigateToLog(
