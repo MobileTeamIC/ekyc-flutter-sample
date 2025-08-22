@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sampleintegrateekyc/log_screen.dart';
 import 'package:sampleintegrateekyc/services/ekyc_method_channel.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'services/ekyc_presentation.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const SampleIntegrateEkycApp());
 }
 
@@ -39,9 +42,10 @@ class _MyHomePageState extends State<MyHomePage> {
   final EkycMethodChannel _ekyc = const EkycMethodChannel();
 
   // You can source these from secure storage/config later per your environment
-  static const String _accessToken = '<ACCESS_TOKEN> including bearer';
-  static const String _tokenId = '<TOKEN_ID>';
-  static const String _tokenKey = '<TOKEN_KEY>';
+  static final String _accessToken = dotenv.env['ACCESS_TOKEN'] ?? '';
+  static final String _tokenId = dotenv.env['TOKEN_ID'] ?? '';
+  static final String _tokenKey = dotenv.env['TOKEN_KEY'] ?? '';
+  static final String baseUrl = dotenv.env['BASE_URL'] ?? '';
 
   _navigateToLog(Map<String, dynamic> json) {
     if (json.isNotEmpty) {
@@ -78,6 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accessToken: _accessToken,
                     tokenId: _tokenId,
                     tokenKey: _tokenKey,
+                    changeBaseUrl: baseUrl,
                   );
                   _navigateToLog(await _ekyc.startEkycFull(config));
                 } on PlatformException catch (e) {
