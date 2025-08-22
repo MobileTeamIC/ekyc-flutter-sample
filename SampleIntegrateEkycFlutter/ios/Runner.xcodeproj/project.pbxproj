@@ -18,6 +18,7 @@
 		D24059232A32B7D00048E2B8 /* eKYCLib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D240591E2A32B7C90048E2B8 /* eKYCLib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D24059242A32B7D10048E2B8 /* ICSdkEKYC.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D240591F2A32B7C90048E2B8 /* ICSdkEKYC.xcframework */; };
 		D24059252A32B7D10048E2B8 /* ICSdkEKYC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D240591F2A32B7C90048E2B8 /* ICSdkEKYC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E83BE7AD2E58265D002F6F73 /* AppDelegate+EKYC.swift in Sources */ = {isa = PBXBuildFile; fileRef = E83BE7AC2E58265D002F6F73 /* AppDelegate+EKYC.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,6 +55,7 @@
 		B8F290AD650F1B2006F15BD5 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		D240591E2A32B7C90048E2B8 /* eKYCLib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = eKYCLib.xcframework; sourceTree = "<group>"; };
 		D240591F2A32B7C90048E2B8 /* ICSdkEKYC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = ICSdkEKYC.xcframework; sourceTree = "<group>"; };
+		E83BE7AC2E58265D002F6F73 /* AppDelegate+EKYC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+EKYC.swift"; sourceTree = "<group>"; };
 		EA8485FF84689B06D7AE714C /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -119,6 +121,7 @@
 				97C147021CF9000F007C117D /* Info.plist */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
+				E83BE7AC2E58265D002F6F73 /* AppDelegate+EKYC.swift */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
@@ -277,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				E83BE7AD2E58265D002F6F73 /* AppDelegate+EKYC.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

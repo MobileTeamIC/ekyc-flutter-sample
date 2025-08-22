@@ -56,10 +56,10 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
          if (resultCode == Activity.RESULT_OK) {
             if (data != null) {
                val json = JSONObject().apply {
-                  putSafe(KeyResultConstants.INFO_RESULT, data.getStringExtra(KeyResultConstants.INFO_RESULT))
+                  putSafe(KeyResultConstants.OCR_RESULT, data.getStringExtra(KeyResultConstants.OCR_RESULT))
                   putSafe(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT))
-                  putSafe(KeyResultConstants.LIVENESS_CARD_REAR_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_CARD_REAR_RESULT))
-                  putSafe(KeyResultConstants.COMPARE_RESULT, data.getStringExtra(KeyResultConstants.COMPARE_RESULT))
+                  putSafe(KeyResultConstants.LIVENESS_CARD_BACK_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_CARD_BACK_RESULT))
+                  putSafe(KeyResultConstants.COMPARE_FACE_RESULT, data.getStringExtra(KeyResultConstants.COMPARE_FACE_RESULT))
                   putSafe(KeyResultConstants.LIVENESS_FACE_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_FACE_RESULT))
                   putSafe(KeyResultConstants.MASKED_FACE_RESULT, data.getStringExtra(KeyResultConstants.MASKED_FACE_RESULT))
                }
@@ -81,7 +81,7 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       intent.putExtra(KeyIntentConstants.VERSION_SDK, SDKEnum.VersionSDKEnum.ADVANCED.value)
 
       // Bật/[Tắt] chức năng So sánh ảnh trong thẻ và ảnh chân dung
-      intent.putExtra(KeyIntentConstants.IS_COMPARE_FLOW, false)
+      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, false)
 
       // Bật/Tắt chức năng kiểm tra che mặt
       intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE, true)
@@ -125,8 +125,8 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       // - MediumFlip: Kiểm tra ảnh hợp lệ trước khi chụp (lật giấy tờ thành công → hiển thị nút chụp)
       // - Advance: Kiểm tra ảnh hợp lệ trước khi chụp (hiển thị nút chụp)
       intent.putExtra(
-         KeyIntentConstants.TYPE_VALIDATE_DOCUMENT,
-         SDKEnum.TypeValidateDocument.Basic.value
+         KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
+         SDKEnum.ValidateDocumentType.Basic.value
       )
 
       return intent
@@ -152,7 +152,7 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       )
 
       // Bật/Tắt chức năng So sánh ảnh trong thẻ và ảnh chân dung
-      intent.putExtra(KeyIntentConstants.IS_COMPARE_FLOW, true)
+      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, true)
 
       // Bật/Tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp (liveness card)
       intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, true)
@@ -175,8 +175,8 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       // - MediumFlip: Kiểm tra ảnh hợp lệ trước khi chụp (lật giấy tờ thành công → hiển thị nút chụp)
       // - Advance: Kiểm tra ảnh hợp lệ trước khi chụp (hiển thị nút chụp)
       intent.putExtra(
-         KeyIntentConstants.TYPE_VALIDATE_DOCUMENT,
-         SDKEnum.TypeValidateDocument.Basic.value
+         KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
+         SDKEnum.ValidateDocumentType.Basic.value
       )
 
       // Giá trị này xác định việc có xác thực số ID với mã tỉnh thành, quận huyện, xã phường tương ứng hay không.

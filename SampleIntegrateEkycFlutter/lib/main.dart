@@ -1,8 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sampleintegrateekyc/log_screen.dart';
+import 'package:sampleintegrateekyc/services/ekyc_method_channel.dart';
+
+import 'services/ekyc_presentation.dart';
 
 void main() {
   runApp(const SampleIntegrateEkycApp());
@@ -35,22 +36,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late MethodChannel _channel;
+  final EkycMethodChannel _ekyc = const EkycMethodChannel();
 
-  @override
-  void initState() {
-    super.initState();
-    _channel = const MethodChannel('flutter.sdk.ekyc/integrate');
-  }
-
-  Future<Map<String, dynamic>> _startEkycByNameMethod({required String methodName}) async {
-    final json = await _channel.invokeMethod(methodName, {
-      "access_token": "<ACCESS_TOKEN> including bearer",
-      "token_id": "<TOKEN_ID>",
-      "token_key": "<TOKEN_KEY>",
-    });
-    return jsonDecode(json);
-  }
+  // You can source these from secure storage/config later per your environment
+  static const String _accessToken = '<ACCESS_TOKEN> including bearer';
+  static const String _tokenId = '<TOKEN_ID>';
+  static const String _tokenKey = '<TOKEN_KEY>';
 
   _navigateToLog(Map<String, dynamic> json) {
     if (json.isNotEmpty) {
@@ -82,33 +73,117 @@ class _MyHomePageState extends State<MyHomePage> {
             _buildButton(
               title: 'eKYC luồng đầy đủ',
               onPressed: () async {
-                _navigateToLog(await _startEkycByNameMethod(methodName: "startEkycFull"));
+                try {
+                  final config = EkycPresets.fullEkyc(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                  );
+                  _navigateToLog(await _ekyc.startEkycFull(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
               },
             ),
             _buildButton(
               title: 'Thực hiện OCR giấy tờ',
               onPressed: () async {
-                _navigateToLog(
-                    await _startEkycByNameMethod(methodName: "startEkycOcr"));
+                try {
+                  final config = EkycPresets.ocrOnly(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                  );
+                  _navigateToLog(await _ekyc.startEkycOcr(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
               },
             ),
             _buildButton(
               title: 'Thực hiện OCR chỉ mặt trước',
               onPressed: () async {
-                _navigateToLog(await _startEkycByNameMethod(methodName: "startEkycOcrFront"));
+                try {
+                  final config = EkycPresets.ocrFront(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                  );
+                  _navigateToLog(await _ekyc.startEkycOcrFront(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
               },
             ),
             _buildButton(
               title: 'Thực hiện OCR chỉ mặt sau',
               onPressed: () async {
-                _navigateToLog(await _startEkycByNameMethod(methodName: "startEkycOcrBack"));
+                // With back-only flow, you must provide hash of front OCR
+                try {
+                  final config = EkycPresets.ocrBack(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                    hashFrontOcr: '<HASH_FRONT_OCR_FROM_OCR_FRONT_RESULT>',
+                  );
+                  _navigateToLog(await _ekyc.startEkycOcrBack(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
               },
             ),
             _buildButton(
               title: 'Thực hiện kiểm tra khuôn mặt',
               onPressed: () async {
-                _navigateToLog(
-                    await _startEkycByNameMethod(methodName: "startEkycFace"));
+                try {
+                  final config = EkycPresets.faceVerification(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                  );
+                  _navigateToLog(await _ekyc.startEkycFace(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildButton(
+              title: 'Thực hiện quét QR code',
+              onPressed: () async {
+                try {
+                  final config = EkycPresets.scanQRCode(
+                    accessToken: _accessToken,
+                    tokenId: _tokenId,
+                    tokenKey: _tokenKey,
+                  );
+                  _navigateToLog(await _ekyc.startEkycScanQRCode(config));
+                } on PlatformException catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.message ?? ''),
+                    ),
+                  );
+                }
               },
             ),
           ],
