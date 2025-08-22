@@ -15,6 +15,7 @@ class LogScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('json: $json');
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -35,6 +36,7 @@ class LogScreen extends StatelessWidget {
                     _copyClipboard(json['COMPARE_RESULT']);
                     _copyClipboard(json['LIVENESS_FACE_RESULT']);
                     _copyClipboard(json['MASKED_FACE_RESULT']);
+                    _copyClipboard(json['QR_CODE_RESULT']);
                   },
                   child: const Text(
                     'Copy All',
@@ -74,6 +76,11 @@ class LogScreen extends StatelessWidget {
             title: 'Mask Face',
             content: json['MASKED_FACE_RESULT'],
           ),
+          _buildLogItem(
+            title: 'Scan QR Code',
+            content: json['QR_CODE_RESULT'],
+            contentIsString: true,
+          ),
         ],
       ),
     );
@@ -85,7 +92,11 @@ class LogScreen extends StatelessWidget {
     }
   }
 
-  Widget _buildLogItem({required String title, String? content}) {
+  Widget _buildLogItem({
+    required String title,
+    String? content,
+    bool contentIsString = false,
+  }) {
     return content != null && content.trim().isNotEmpty
         ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,16 +114,24 @@ class LogScreen extends StatelessWidget {
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
-                    jsonDecode(content)['logID'] != null
+                    contentIsString
                         ? TextButton(
-                            onPressed: () =>
-                                _copyClipboard(jsonDecode(content)['logID']),
+                            onPressed: () => _copyClipboard(content),
                             child: const Text(
-                              'Copy LogId',
+                              ' Info',
                               style: TextStyle(color: Colors.white),
                             ),
                           )
-                        : const SizedBox.shrink(),
+                        : jsonDecode(content)['logID'] != null
+                            ? TextButton(
+                                onPressed: () => _copyClipboard(
+                                    jsonDecode(content)['logID']),
+                                child: const Text(
+                                  'Copy LogId',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
                     TextButton(
                       onPressed: () => _copyClipboard(content),
                       child: const Text(

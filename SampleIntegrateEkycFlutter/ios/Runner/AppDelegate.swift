@@ -483,6 +483,8 @@ extension AppDelegate: ICEkycCameraDelegate {
         let dataCompareResult = ICEKYCSavedData.shared().compareFaceResult;
         let dataLivenessFaceResult = ICEKYCSavedData.shared().livenessFaceResult;
         let dataMaskedFaceResult = ICEKYCSavedData.shared().maskedFaceResult;
+        let qrCodeResult = ICEKYCSavedData.shared().qrCodeResult;
+        
         
         let dict = [
             "INFO_RESULT": dataInfoResult,
@@ -490,7 +492,9 @@ extension AppDelegate: ICEkycCameraDelegate {
             "LIVENESS_CARD_REAR_RESULT": dataLivenessCardRearResult,
             "COMPARE_RESULT": dataCompareResult,
             "LIVENESS_FACE_RESULT": dataLivenessFaceResult,
-            "MASKED_FACE_RESULT": dataMaskedFaceResult]
+            "MASKED_FACE_RESULT": dataMaskedFaceResult,
+            "QR_CODE_RESULT": qrCodeResult
+        ]
         
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted)
