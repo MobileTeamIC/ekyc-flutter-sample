@@ -56,7 +56,7 @@ import ICSdkEKYC
            })
        }
     
-    
+    //MARK: - Full
     /// Luồng đầy đủ: OCR + Face Verification
     /// 
     /// Thực hiện eKYC đầy đủ các bước: chụp giấy tờ và chụp ảnh chân dung
@@ -136,6 +136,7 @@ import ICSdkEKYC
         }
     }
     
+    //MARK: - OCR
     /// Luồng chỉ thực hiện đọc giấy tờ: OCR
     /// 
     /// Thực hiện OCR giấy tờ (cả mặt trước và mặt sau)
@@ -204,6 +205,7 @@ import ICSdkEKYC
         
     }
     
+    //MARK: - OCR FONT
     /// Luồng chỉ thực hiện đọc giấy tờ chỉ mặt trước: OCR Front
     /// 
     /// Thực hiện OCR giấy tờ một bước: chụp mặt trước giấy tờ
@@ -271,6 +273,7 @@ import ICSdkEKYC
         
     }
     
+    //MARK: - ORC BACK
     /// Luồng chỉ thực hiện đọc giấy tờ chỉ mặt sau: OCR Back
     /// 
     /// Thực hiện OCR giấy tờ một bước: chụp mặt sau giấy tờ
@@ -341,7 +344,7 @@ import ICSdkEKYC
         
     }
     
-    
+    //MARK: - FACE
     /// Luồng chỉ thực hiện xác thực khuôn mặt: Face Verification
     /// 
     /// Thực hiện chụp ảnh Oval xa gần và thực hiện các chức năng tùy vào cấu hình: Compare, Verify, Mask, Liveness Face
@@ -409,7 +412,7 @@ import ICSdkEKYC
         }
     }
 
-
+    //MARK: - SCANQR CODE
     /// Luồng chỉ thực hiện quét QR code: Scan QR Code
     /// 
     /// Thực hiện quét QR code để lấy thông tin từ QR code
