@@ -5,6 +5,7 @@ import android.content.Intent
 import com.vnptit.idg.sdk.activity.VnptIdentityActivity
 import com.vnptit.idg.sdk.activity.VnptOcrActivity
 import com.vnptit.idg.sdk.activity.VnptPortraitActivity
+import com.vnptit.idg.sdk.activity.VnptQRCodeActivity
 import com.vnptit.idg.sdk.utils.KeyIntentConstants
 import com.vnptit.idg.sdk.utils.KeyResultConstants
 import com.vnptit.idg.sdk.utils.SDKEnum
@@ -42,6 +43,10 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
          "startEkycFull" -> activity.getIntentEkycFull(json)
          "startEkycOcr" -> activity.getIntentEkycOcr(json)
          "startEkycFace" -> activity.getIntentEkycFace(json)
+         // Added for parity with iOS/Dart services
+         "startEkycOcrFront" -> activity.getIntentEkycOcrFront(json)
+         "startEkycOcrBack" -> activity.getIntentEkycOcrBack(json)
+         "startEkycScanQRCode" -> activity.getIntentEkycScanQRCode(json)
          else -> {
             result.notImplemented()
             null
@@ -56,12 +61,14 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
          if (resultCode == Activity.RESULT_OK) {
             if (data != null) {
                val json = JSONObject().apply {
-                  putSafe(KeyResultConstants.OCR_RESULT, data.getStringExtra(KeyResultConstants.OCR_RESULT))
-                  putSafe(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT))
-                  putSafe(KeyResultConstants.LIVENESS_CARD_BACK_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_CARD_BACK_RESULT))
-                  putSafe(KeyResultConstants.COMPARE_FACE_RESULT, data.getStringExtra(KeyResultConstants.COMPARE_FACE_RESULT))
-                  putSafe(KeyResultConstants.LIVENESS_FACE_RESULT, data.getStringExtra(KeyResultConstants.LIVENESS_FACE_RESULT))
-                  putSafe(KeyResultConstants.MASKED_FACE_RESULT, data.getStringExtra(KeyResultConstants.MASKED_FACE_RESULT))
+                  putSafe("INFO_RESULT", data.getStringExtra(KeyResultConstants.OCR_RESULT))
+                  putSafe("LIVENESS_CARD_FRONT_RESULT", data.getStringExtra(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT))
+                  putSafe("LIVENESS_CARD_REAR_RESULT", data.getStringExtra(KeyResultConstants.LIVENESS_CARD_BACK_RESULT))
+                  putSafe("COMPARE_RESULT", data.getStringExtra(KeyResultConstants.COMPARE_FACE_RESULT))
+                  putSafe("LIVENESS_FACE_RESULT", data.getStringExtra(KeyResultConstants.LIVENESS_FACE_RESULT))
+                  putSafe("MASKED_FACE_RESULT", data.getStringExtra(KeyResultConstants.MASKED_FACE_RESULT))
+                  // QR_CODE_RESULT trả về là string đơn giản, không cần prettify
+                  putSafe("QR_CODE_RESULT", data.getStringExtra(KeyResultConstants.QR_CODE_RESULT), false)
                }
                result.success(json.toString())
             }
@@ -69,34 +76,7 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       }
    }
 
-   // Phương thức thực hiện eKYC luồng đầy đủ bao gồm: Chụp ảnh giấy tờ và chụp ảnh chân dung
-   // Bước 1 - chụp ảnh chân dung xa gần
-   // Bước 2 - hiển thị kết quả
-   private fun Activity.getIntentEkycFace(json: JSONObject): Intent {
-      val intent = getBaseIntent(VnptPortraitActivity::class.java, json)
 
-      // Giá trị này xác định phiên bản khi sử dụng Máy ảnh tại bước chụp ảnh chân dung luồng full. Mặc định là Normal ✓
-      // - Normal: chụp ảnh chân dung 1 hướng
-      // - ADVANCED: chụp ảnh chân dung xa gần
-      intent.putExtra(KeyIntentConstants.VERSION_SDK, SDKEnum.VersionSDKEnum.ADVANCED.value)
-
-      // Bật/[Tắt] chức năng So sánh ảnh trong thẻ và ảnh chân dung
-      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, false)
-
-      // Bật/Tắt chức năng kiểm tra che mặt
-      intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE, true)
-
-      // Lựa chọn chức năng kiểm tra ảnh chân dung chụp trực tiếp (liveness face)
-      // - NoneCheckFace: Không thực hiện kiểm tra ảnh chân dung chụp trực tiếp hay không
-      // - IBeta: Kiểm tra ảnh chân dung chụp trực tiếp hay không iBeta (phiên bản hiện tại)
-      // - Standard: Kiểm tra ảnh chân dung chụp trực tiếp hay không Standard (phiên bản mới)
-      intent.putExtra(
-         KeyIntentConstants.CHECK_LIVENESS_FACE,
-         SDKEnum.ModeCheckLiveNessFace.iBETA.value
-      )
-
-      return intent
-   }
 
 
    // Phương thức thực hiện eKYC luồng "Chụp ảnh giấy tờ"
@@ -105,28 +85,19 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
    private fun Activity.getIntentEkycOcr(json: JSONObject): Intent {
       val intent = getBaseIntent(VnptOcrActivity::class.java, json)
 
-      // Giá trị này xác định kiểu giấy tờ để sử dụng:
-      // - IdentityCard: Chứng minh thư nhân dân, Căn cước công dân
-      // - IDCardChipBased: Căn cước công dân gắn Chip
-      // - Passport: Hộ chiếu
-      // - DriverLicense: Bằng lái xe
-      // - MilitaryIdCard: Chứng minh thư quân đội
+      // document_type
       intent.putExtra(
          KeyIntentConstants.DOCUMENT_TYPE,
-         SDKEnum.DocumentTypeEnum.IDENTITY_CARD.value
+         mapDocumentType(json.optString("document_type"))
       )
 
-      // Bật/Tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp (liveness card)
-      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, true)
+      // is_check_liveness_card
+      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, json.optBoolean("is_check_liveness_card", true))
 
-      // Lựa chọn chế độ kiểm tra ảnh giấy tờ ngay từ SDK
-      // - None: Không thực hiện kiểm tra ảnh khi chụp ảnh giấy tờ
-      // - Basic: Kiểm tra sau khi chụp ảnh
-      // - MediumFlip: Kiểm tra ảnh hợp lệ trước khi chụp (lật giấy tờ thành công → hiển thị nút chụp)
-      // - Advance: Kiểm tra ảnh hợp lệ trước khi chụp (hiển thị nút chụp)
+      // validate_document_type
       intent.putExtra(
          KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
-         SDKEnum.ValidateDocumentType.Basic.value
+         mapValidateDocument(json.optString("validate_document_type"))
       )
 
       return intent
@@ -137,63 +108,240 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
    // Bước 1 - chụp ảnh giấy tờ
    // Bước 2 - chụp ảnh chân dung xa gần
    // Bước 3 - hiển thị kết quả
+
+   /// - Required Parameters (info):
+   ///   - access_token: Mã truy cập từ eKYC admin dashboard
+   ///   - token_id: Token ID từ eKYC admin dashboard
+   ///   - token_key: Token key từ eKYC admin dashboard
+   ///
+   /// - Optional Parameters (info):
+   ///   - flow_type: Loại luồng thực hiện ("full", "none", "scanqr", "ocrfront", "ocrback", "ocr", "face")
+   ///   - version_sdk: Phiên bản SDK cho chụp ảnh chân dung ("normal", "prooval")
+   ///   - document_type: Loại giấy tờ ("identitycard", "idcardchipbased", "passport", "driverlicense", "militaryidcard")
+   ///   - is_show_tutorial: Hiển thị màn hình hướng dẫn ("true"/"false")
+   ///   - is_enable_compare: Bật/tắt chức năng so sánh ảnh chân dung ("true"/"false")
+   ///   - is_check_masked_face: Bật/tắt chức năng kiểm tra che mặt ("true"/"false")
+   ///   - check_liveness_face: Chức năng kiểm tra ảnh chân dung chụp trực tiếp ("nonecheckface", "ibeta", "standard")
+   ///   - is_check_liveness_card: Bật/tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp ("true"/"false")
+   ///   - is_validate_postcode: Bật/tắt chức năng kiểm tra mã bưu điện ("true"/"false")
+   ///   - validate_document_type: Chế độ kiểm tra ảnh giấy tờ ("none", "basic", "medium", "advance")
+   ///   - change_base_url: Đường dẫn API tùy chỉnh
+   ///   - is_enable_gotit: Bật/tắt nút "Bỏ qua hướng dẫn" ("true"/"false")
+   ///   - language_sdk: Ngôn ngữ SDK ("icekyc_vi", "icekyc_en")
+   ///   - is_show_logo: Bật/tắt hiển thị LOGO thương hiệu ("true"/"false")
    private fun Activity.getIntentEkycFull(json: JSONObject): Intent {
       val intent = getBaseIntent(VnptIdentityActivity::class.java, json)
-
-      // Giá trị này xác định kiểu giấy tờ để sử dụng:
-      // - IDENTITY_CARD: Chứng minh thư nhân dân, Căn cước công dân
-      // - IDCardChipBased: Căn cước công dân gắn Chip
-      // - Passport: Hộ chiếu
-      // - DriverLicense: Bằng lái xe
-      // - MilitaryIdCard: Chứng minh thư quân đội
+      // document_type
       intent.putExtra(
          KeyIntentConstants.DOCUMENT_TYPE,
-         SDKEnum.DocumentTypeEnum.IDENTITY_CARD.value
+         mapDocumentType(json.optString("document_type"))
       )
 
-      // Bật/Tắt chức năng So sánh ảnh trong thẻ và ảnh chân dung
-      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, true)
+      // is_enable_compare
+      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE,
+         json.optBoolean("is_enable_compare", true)
+      )
 
-      // Bật/Tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp (liveness card)
-      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, true)
+      // is_check_liveness_card
+      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD,
+         json.optBoolean("is_check_liveness_card", true)
+      )
 
-      // Lựa chọn chức năng kiểm tra ảnh chân dung chụp trực tiếp (liveness face)
-      // - NoneCheckFace: Không thực hiện kiểm tra ảnh chân dung chụp trực tiếp hay không
-      // - iBETA: Kiểm tra ảnh chân dung chụp trực tiếp hay không iBeta (phiên bản hiện tại)
-      // - Standard: Kiểm tra ảnh chân dung chụp trực tiếp hay không Standard (phiên bản mới)
+      // check_liveness_face
       intent.putExtra(
          KeyIntentConstants.CHECK_LIVENESS_FACE,
-         SDKEnum.ModeCheckLiveNessFace.iBETA.value
+         mapLivenessFace(json.optString("check_liveness_face"))
       )
 
-      // Bật/Tắt chức năng kiểm tra che mặt
-      intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE, true)
+      // is_check_masked_face
+      intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE,
+         json.optBoolean("is_check_masked_face", true)
+      )
 
-      // Lựa chọn chế độ kiểm tra ảnh giấy tờ ngay từ SDK
-      // - None: Không thực hiện kiểm tra ảnh khi chụp ảnh giấy tờ
-      // - Basic: Kiểm tra sau khi chụp ảnh
-      // - MediumFlip: Kiểm tra ảnh hợp lệ trước khi chụp (lật giấy tờ thành công → hiển thị nút chụp)
-      // - Advance: Kiểm tra ảnh hợp lệ trước khi chụp (hiển thị nút chụp)
+      // validate_document_type
       intent.putExtra(
          KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
-         SDKEnum.ValidateDocumentType.Basic.value
+         mapValidateDocument(json.optString("validate_document_type"))
       )
 
-      // Giá trị này xác định việc có xác thực số ID với mã tỉnh thành, quận huyện, xã phường tương ứng hay không.
-      intent.putExtra(KeyIntentConstants.IS_VALIDATE_POSTCODE, true)
+      // is_validate_postcode
+      intent.putExtra(KeyIntentConstants.IS_VALIDATE_POSTCODE,
+         json.optBoolean("is_validate_postcode", true)
+      )
 
-      // Giá trị này xác định phiên bản khi sử dụng Máy ảnh tại bước chụp ảnh chân dung luồng full. Mặc định là Normal ✓
-      // - Normal: chụp ảnh chân dung 1 hướng
-      // - ProOval: chụp ảnh chân dung xa gần
-      intent.putExtra(KeyIntentConstants.VERSION_SDK, SDKEnum.VersionSDKEnum.ADVANCED.value)
+      // version_sdk
+      intent.putExtra(
+         KeyIntentConstants.VERSION_SDK,
+         mapVersionSdk(json.optString("version_sdk"))
+      )
 
+      //change_base_url
+      intent.putExtra(KeyIntentConstants.CHANGE_BASE_URL, json.optString("change_base_url"))
+
+      return intent
+   }
+
+   // MARK: - FACE
+   /// Luồng chỉ thực hiện xác thực khuôn mặt: Face Verification
+   /// 
+   /// Thực hiện chụp ảnh Oval xa gần và thực hiện các chức năng tùy vào cấu hình: Compare, Verify, Mask, Liveness Face
+   /// 
+   /// - Required Parameters (info):
+   ///   - access_token: Mã truy cập từ eKYC admin dashboard
+   ///   - token_id: Token ID từ eKYC admin dashboard
+   ///   - token_key: Token key từ eKYC admin dashboard
+   /// 
+   /// - Optional Parameters (info):
+   ///   - version_sdk: Phiên bản SDK cho chụp ảnh chân dung ("normal", "prooval")
+   ///   - is_show_tutorial: Hiển thị màn hình hướng dẫn ("true"/"false")
+   ///   - is_enable_compare: Bật/tắt chức năng so sánh ảnh chân dung ("true"/"false")
+   ///   - is_check_masked_face: Bật/tắt chức năng kiểm tra che mặt ("true"/"false")
+   ///   - check_liveness_face: Chức năng kiểm tra ảnh chân dung chụp trực tiếp ("nonecheckface", "ibeta", "standard")
+   ///   - change_base_url: Đường dẫn API tùy chỉnh
+   ///   - is_enable_gotit: Bật/tắt nút "Bỏ qua hướng dẫn" ("true"/"false")
+   ///   - language_sdk: Ngôn ngữ SDK ("icekyc_vi", "icekyc_en")
+   ///   - is_show_logo: Bật/tắt hiển thị LOGO thương hiệu ("true"/"false")
+   private fun Activity.getIntentEkycFace(json: JSONObject): Intent {
+      val intent = getBaseIntent(VnptPortraitActivity::class.java, json)
+
+      // version_sdk: normal|prooval (map -> Standard|ADVANCED)
+      intent.putExtra(
+         KeyIntentConstants.VERSION_SDK,
+         mapVersionSdk(json.optString("version_sdk"))
+      )
+
+      // is_enable_compare
+      intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, json.optBoolean("is_enable_compare", false))
+
+      // is_check_masked_face
+      intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE, json.optBoolean("is_check_masked_face", true))
+
+      // check_liveness_face: nonecheckface|ibeta|standard
+      intent.putExtra(
+         KeyIntentConstants.CHECK_LIVENESS_FACE,
+         mapLivenessFace(json.optString("check_liveness_face"))
+      )
+
+      return intent
+   }
+
+   // MARK: - OCR FRONT
+   /// Luồng chỉ thực hiện đọc giấy tờ chỉ mặt trước: OCR Front
+   /// 
+   /// Thực hiện OCR giấy tờ một bước: chụp mặt trước giấy tờ
+   /// 
+   /// - Required Parameters (info):
+   ///   - access_token: Mã truy cập từ eKYC admin dashboard
+   ///   - token_id: Token ID từ eKYC admin dashboard
+   ///   - token_key: Token key từ eKYC admin dashboard
+   /// 
+   /// - Optional Parameters (info):
+   ///   - document_type: Loại giấy tờ ("identitycard", "idcardchipbased", "passport", "driverlicense", "militaryidcard")
+   ///   - is_show_tutorial: Hiển thị màn hình hướng dẫn ("true"/"false")
+   ///   - is_check_liveness_card: Bật/tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp ("true"/"false")
+   ///   - validate_document_type: Chế độ kiểm tra ảnh giấy tờ ("none", "basic", "medium", "advance")
+   ///   - change_base_url: Đường dẫn API tùy chỉnh
+   ///   - is_enable_gotit: Bật/tắt nút "Bỏ qua hướng dẫn" ("true"/"false")
+   ///   - language_sdk: Ngôn ngữ SDK ("icekyc_vi", "icekyc_en")
+   ///   - is_show_logo: Bật/tắt hiển thị LOGO thương hiệu ("true"/"false")
+   private fun Activity.getIntentEkycOcrFront(json: JSONObject): Intent {
+      val intent = getBaseIntent(VnptOcrActivity::class.java, json)
+
+      // document_type
+      intent.putExtra(
+         KeyIntentConstants.DOCUMENT_TYPE,
+         mapDocumentType(json.optString("document_type"))
+      )
+
+      // is_check_liveness_card
+      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, json.optBoolean("is_check_liveness_card", true))
+
+      // validate_document_type
+      intent.putExtra(
+         KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
+         mapValidateDocument(json.optString("validate_document_type"))
+      )
+
+      // change_base_url
+      intent.putExtra(KeyIntentConstants.CHANGE_BASE_URL, json.optString("change_base_url"))
+
+      return intent
+   }
+
+   // MARK: - OCR BACK
+   /// Luồng chỉ thực hiện đọc giấy tờ chỉ mặt sau: OCR Back
+   /// 
+   /// Thực hiện OCR giấy tờ một bước: chụp mặt sau giấy tờ
+   /// 
+   /// - Required Parameters (info):
+   ///   - access_token: Mã truy cập từ eKYC admin dashboard
+   ///   - token_id: Token ID từ eKYC admin dashboard
+   ///   - token_key: Token key từ eKYC admin dashboard
+   /// 
+   /// - Optional Parameters (info):
+   ///   - document_type: Loại giấy tờ ("identitycard", "idcardchipbased", "passport", "driverlicense", "militaryidcard")
+   ///   - is_show_tutorial: Hiển thị màn hình hướng dẫn ("true"/"false")
+   ///   - hash_front_ocr: Hash của kết quả OCR mặt trước (bắt buộc cho ocrback)
+   ///   - is_check_liveness_card: Bật/tắt chức năng kiểm tra ảnh giấy tờ chụp trực tiếp ("true"/"false")
+   ///   - validate_document_type: Chế độ kiểm tra ảnh giấy tờ ("none", "basic", "medium", "advance")
+   ///   - change_base_url: Đường dẫn API tùy chỉnh
+   ///   - is_enable_gotit: Bật/tắt nút "Bỏ qua hướng dẫn" ("true"/"false")
+   ///   - language_sdk: Ngôn ngữ SDK ("icekyc_vi", "icekyc_en")
+   ///   - is_show_logo: Bật/tắt hiển thị LOGO thương hiệu ("true"/"false")
+   private fun Activity.getIntentEkycOcrBack(json: JSONObject): Intent {
+      val intent = getBaseIntent(VnptOcrActivity::class.java, json)
+
+      // document_type
+      intent.putExtra(
+         KeyIntentConstants.DOCUMENT_TYPE,
+         mapDocumentType(json.optString("document_type"))
+      )
+
+      // hash_front_ocr (bắt buộc cho ocrback)
+      if (json.has("hash_front_ocr")) {
+         intent.putExtra("HASH_FRONT_OCR", json.optString("hash_front_ocr"))
+      }
+
+      // is_check_liveness_card
+      intent.putExtra(KeyIntentConstants.IS_CHECK_LIVENESS_CARD, json.optBoolean("is_check_liveness_card", true))
+
+      // validate_document_type
+      intent.putExtra(
+         KeyIntentConstants.VALIDATE_DOCUMENT_TYPE,
+         mapValidateDocument(json.optString("validate_document_type"))
+      )
+
+      // change_base_url
+      intent.putExtra(KeyIntentConstants.CHANGE_BASE_URL, json.optString("change_base_url"))
+
+      return intent
+   }
+
+   // MARK: - SCAN QR CODE
+   /// Luồng chỉ thực hiện quét QR code: Scan QR Code
+   /// 
+   /// Thực hiện quét QR code để lấy thông tin từ QR code
+   /// 
+   /// - Required Parameters (info):
+   ///   - access_token: Mã truy cập từ eKYC admin dashboard
+   ///   - token_id: Token ID từ eKYC admin dashboard
+   ///   - token_key: Token key từ eKYC admin dashboard
+   /// 
+   /// - Optional Parameters (info):
+   ///   - is_show_tutorial: Hiển thị màn hình hướng dẫn ("true"/"false")
+   ///   - is_enable_gotit: Bật/tắt nút "Bỏ qua hướng dẫn" ("true"/"false")
+   ///   - language_sdk: Ngôn ngữ SDK ("icekyc_vi", "icekyc_en")
+   ///   - is_show_logo: Bật/tắt hiển thị LOGO thương hiệu ("true"/"false")
+   private fun Activity.getIntentEkycScanQRCode(json: JSONObject): Intent {
+      val intent = getBaseIntent(VnptQRCodeActivity::class.java, json)
+      
       return intent
    }
 
    private fun <T : Activity> Activity.getBaseIntent(clazz: Class<T>, json: JSONObject): Intent {
       val intent = Intent(this, clazz)
 
-      // Nhập thông tin bộ mã truy cập. Lấy tại mục Quản lý Token https://ekyc.vnpt.vn/admin-dashboard/console/project-manager
+      // ACCESS_TOKEN
       intent.putExtra(
          KeyIntentConstants.ACCESS_TOKEN,
          if (json.has("access_token")) json.getString("access_token") else ""
@@ -207,23 +355,27 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
          if (json.has("token_key")) json.getString("token_key") else ""
       )
 
-      // Giá trị này dùng để đảm bảo mỗi yêu cầu (request) từ phía khách hàng sẽ không bị thay đổi.
+      // Challenge code
       intent.putExtra(KeyIntentConstants.CHALLENGE_CODE, "INNOVATIONCENTER")
 
       // Ngôn ngữ sử dụng trong SDK
       // - VIETNAMESE: Tiếng Việt
       // - ENGLISH: Tiếng Anh
-      intent.putExtra(KeyIntentConstants.LANGUAGE_SDK, SDKEnum.LanguageEnum.VIETNAMESE.value)
+      intent.putExtra(
+         KeyIntentConstants.LANGUAGE_SDK,
+         mapLanguage(json.optString("language_sdk")).value
+      )
 
-      // Bật/Tắt Hiển thị màn hình hướng dẫn
-      intent.putExtra(KeyIntentConstants.IS_SHOW_TUTORIAL, true)
+      // is_show_tutorial
+      intent.putExtra(KeyIntentConstants.IS_SHOW_TUTORIAL, json.optBoolean("is_show_tutorial", true))
 
-      // Bật chức năng hiển thị nút bấm "Bỏ qua hướng dẫn" tại các màn hình hướng dẫn bằng video
-      intent.putExtra(KeyIntentConstants.IS_ENABLE_GOT_IT, true)
+      // is_enable_gotit
+      intent.putExtra(KeyIntentConstants.IS_ENABLE_GOT_IT, json.optBoolean("is_enable_gotit", true))
 
-      // Sử dụng máy ảnh mặt trước
-      // - FRONT: Camera trước
-      // - BACK: Camera trước
+      // is_show_logo
+      intent.putExtra(KeyIntentConstants.IS_SHOW_LOGO, json.optBoolean("is_show_logo", true))
+
+      // Camera front for portrait
       intent.putExtra(
          KeyIntentConstants.CAMERA_POSITION_FOR_PORTRAIT,
          SDKEnum.CameraTypeEnum.FRONT.value
@@ -244,7 +396,60 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
    /**
     * put value to [JSONObject] with null-safety
     */
-   private fun JSONObject.putSafe(key: String, value: String?) {
-      value?.let { put(key, JsonUtil.prettify(it)) }
+   private fun JSONObject.putSafe(key: String, value: String?, prettify: Boolean = true) {
+      value?.let { 
+         if (prettify) {
+            put(key, JsonUtil.prettify(it))
+         } else {
+            put(key, it)
+         }
+      }
    }
+
+   // region Mappers from Dart/iOS-friendly strings to Android SDK enums
+   private fun mapVersionSdk(value: String?): Int {
+      return when (value?.lowercase()) {
+         "normal" -> SDKEnum.VersionSDKEnum.STANDARD.value
+         "prooval" -> SDKEnum.VersionSDKEnum.ADVANCED.value
+         else -> SDKEnum.VersionSDKEnum.STANDARD.value
+      }
+   }
+
+   private fun mapDocumentType(value: String?): Int {
+      return when (value?.lowercase()) {
+         "identitycard" -> SDKEnum.DocumentTypeEnum.IDENTITY_CARD.value
+         "idcardchipbased" -> SDKEnum.DocumentTypeEnum.IDENTITY_CARD_CHIP.value
+         "passport" -> SDKEnum.DocumentTypeEnum.PASSPORT.value
+         "driverlicense" -> SDKEnum.DocumentTypeEnum.DRIVER_LICENSE.value
+         "militaryidcard" -> SDKEnum.DocumentTypeEnum.MILITARY_CARD.value
+         else -> SDKEnum.DocumentTypeEnum.IDENTITY_CARD.value
+      }
+   }
+
+   private fun mapValidateDocument(value: String?): Int {
+      return when (value?.lowercase()) {
+         "none" -> SDKEnum.ValidateDocumentType.None.value
+         "basic" -> SDKEnum.ValidateDocumentType.Basic.value
+         "medium" -> SDKEnum.ValidateDocumentType.Medium.value
+         "advance" -> SDKEnum.ValidateDocumentType.Advance.value
+         else -> SDKEnum.ValidateDocumentType.Basic.value
+      }
+   }
+
+   private fun mapLivenessFace(value: String?): Int {
+      return when (value?.lowercase()) {
+         "nonecheckface" -> SDKEnum.ModeCheckLiveNessFace.NONE.value
+         "ibeta" -> SDKEnum.ModeCheckLiveNessFace.iBETA.value
+         "standard" -> SDKEnum.ModeCheckLiveNessFace.STANDARD.value
+         else -> SDKEnum.ModeCheckLiveNessFace.NONE.value
+      }
+   }
+
+   private fun mapLanguage(value: String?): SDKEnum.LanguageEnum {
+      return when (value?.lowercase()) {
+         "icekyc_en" -> SDKEnum.LanguageEnum.ENGLISH
+         else -> SDKEnum.LanguageEnum.VIETNAMESE
+      }
+   }
+   // endregion
 }
