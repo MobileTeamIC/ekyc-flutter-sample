@@ -13,5 +13,5 @@ key.properties
 **/*.jks
 /app/.cxx
 build/
-/eKYC/.aar
-/scanqr/.aar
+/ekyc/sdk/
+/scanqr/sdk/
