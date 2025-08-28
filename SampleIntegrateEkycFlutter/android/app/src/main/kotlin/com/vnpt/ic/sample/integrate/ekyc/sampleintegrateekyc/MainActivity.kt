@@ -43,7 +43,6 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
          "startEkycFull" -> activity.getIntentEkycFull(json)
          "startEkycOcr" -> activity.getIntentEkycOcr(json)
          "startEkycFace" -> activity.getIntentEkycFace(json)
-         // Added for parity with iOS/Dart services
          "startEkycOcrFront" -> activity.getIntentEkycOcrFront(json)
          "startEkycOcrBack" -> activity.getIntentEkycOcrBack(json)
          "startEkycScanQRCode" -> activity.getIntentEkycScanQRCode(json)
