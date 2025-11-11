@@ -161,6 +161,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accessToken: _accessToken,
                     tokenId: _tokenId,
                     tokenKey: _tokenKey,
+                    hashImageCompare: '<HASH_FRONT_OCR_FROM_OCR_FRONT_RESULT>',
                   );
                   _navigateToLog(await _ekyc.startEkycFace(config));
                 } on PlatformException catch (e) {

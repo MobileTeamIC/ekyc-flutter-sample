@@ -376,6 +376,7 @@ import ICSdkEKYC
         let tokenId = (args["token_id"] as? String) ?? ""
         let tokenKey = (args["token_key"] as? String) ?? ""
         let versionSdk = (args["version_sdk"] as? String) ?? ""
+        let hashImageCompare = (args["hash_image_compare"] as? String) ?? ""
         let isShowTutorial = (args["is_show_tutorial"] as? Bool) ?? false
         let isEnableCompare = (args["is_enable_compare"] as? Bool) ?? false
         let isCheckMaskedFace = (args["is_check_masked_face"] as? Bool) ?? false
@@ -395,6 +396,7 @@ import ICSdkEKYC
         ICEkycCamera.versionSdk = convertToVersionSdk(versionSdk)
         ICEkycCamera.isShowTutorial = isShowTutorial
         ICEkycCamera.isEnableCompare = isEnableCompare
+        ICEkycCamera.hashImageCompare = hashImageCompare
         ICEkycCamera.isCheckMaskedFace = isCheckMaskedFace
         ICEkycCamera.checkLivenessFace = convertToLivenessFaceMode(checkLivenessFace)
         ICEkycCamera.changeBaseUrl = changeBaseUrl

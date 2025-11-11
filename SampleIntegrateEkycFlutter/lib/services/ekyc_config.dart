@@ -6,8 +6,9 @@ class EkycConfig {
   final String accessToken;
   final String tokenId;
   final String tokenKey;
-  final DocumentType? documentType;
+  final DocumentType? documentType; 
   final ValidateDocumentType? validateDocumentType;
+  final String? hashImageCompare;
 
   // Camera configuration
   final VersionSdk? versionSdk;
@@ -33,6 +34,7 @@ class EkycConfig {
     required this.accessToken,
     required this.tokenId,
     required this.tokenKey,
+    this.hashImageCompare,
     this.documentType,
     this.validateDocumentType,
     this.versionSdk,
@@ -84,6 +86,7 @@ class EkycConfig {
     if (changeBaseUrl != null) map['change_base_url'] = changeBaseUrl!;
     if (languageSdk != null) map['language_sdk'] = languageSdk!.name;
     if (hashFrontOcr != null) map['hash_front_ocr'] = hashFrontOcr!;
+    if (hashImageCompare != null) map['hash_image_compare'] = hashImageCompare!;
 
     return map;
   }

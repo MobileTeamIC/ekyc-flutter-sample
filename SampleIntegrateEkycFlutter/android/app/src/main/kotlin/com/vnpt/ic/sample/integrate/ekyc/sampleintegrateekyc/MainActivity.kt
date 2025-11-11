@@ -212,6 +212,9 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
       // is_enable_compare
       intent.putExtra(KeyIntentConstants.IS_ENABLE_COMPARE, json.optBoolean("is_enable_compare", false))
 
+      // hash image compare
+      intent.putExtra(KeyIntentConstants.HASH_IMAGE_COMAPRE, json.optString("hash_image_compare", ""))
+
       // is_check_masked_face
       intent.putExtra(KeyIntentConstants.IS_CHECK_MASKED_FACE, json.optBoolean("is_check_masked_face", true))
 
