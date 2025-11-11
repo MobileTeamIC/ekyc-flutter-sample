@@ -61,6 +61,7 @@ class MainActivity : FlutterActivity(), MethodChannel.MethodCallHandler {
             if (data != null) {
                val json = JSONObject().apply {
                   putSafe("INFO_RESULT", data.getStringExtra(KeyResultConstants.OCR_RESULT))
+                  putSafe("HASH_IMAGE_FRONT_RESULT", data.getStringExtra(KeyResultConstants.HASH_IMAGE_FRONT))
                   putSafe("LIVENESS_CARD_FRONT_RESULT", data.getStringExtra(KeyResultConstants.LIVENESS_CARD_FRONT_RESULT))
                   putSafe("LIVENESS_CARD_REAR_RESULT", data.getStringExtra(KeyResultConstants.LIVENESS_CARD_BACK_RESULT))
                   putSafe("COMPARE_RESULT", data.getStringExtra(KeyResultConstants.COMPARE_FACE_RESULT))

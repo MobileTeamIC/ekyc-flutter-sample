@@ -489,10 +489,11 @@ extension AppDelegate: ICEkycCameraDelegate {
         let dataLivenessFaceResult = ICEKYCSavedData.shared().livenessFaceResult;
         let dataMaskedFaceResult = ICEKYCSavedData.shared().maskedFaceResult;
         let qrCodeResult = ICEKYCSavedData.shared().qrCodeResult;
-        
+        let hashFrontResult = ICEKYCSavedData.shared().hashImageFront;
         
         let dict = [
             "INFO_RESULT": dataInfoResult,
+            "HASH_IMAGE_FRONT_RESULT": hashFrontResult,
             "LIVENESS_CARD_FRONT_RESULT": dataLivenessCardFrontResult,
             "LIVENESS_CARD_REAR_RESULT": dataLivenessCardRearResult,
             "COMPARE_RESULT": dataCompareResult,

@@ -31,6 +31,7 @@ class LogScreen extends StatelessWidget {
               ? TextButton(
                   onPressed: () {
                     _copyClipboard(json['INFO_RESULT']);
+                    _copyClipboard(json['HASH_IMAGE_FRONT_RESULT']);
                     _copyClipboard(json['LIVENESS_CARD_FRONT_RESULT']);
                     _copyClipboard(json['LIVENESS_CARD_REAR_RESULT']);
                     _copyClipboard(json['COMPARE_RESULT']);
@@ -57,6 +58,10 @@ class LogScreen extends StatelessWidget {
             content: json['INFO_RESULT'],
           ),
           _buildLogItem(
+            title: 'Hash Image Front',
+            content: json['HASH_IMAGE_FRONT_RESULT'],
+          ),
+          _buildLogItem(
             title: 'Liveness Card Front',
             content: json['LIVENESS_CARD_FRONT_RESULT'],
           ),
@@ -79,7 +84,6 @@ class LogScreen extends StatelessWidget {
           _buildLogItem(
             title: 'Scan QR Code',
             content: json['QR_CODE_RESULT'],
-            contentIsString: true,
           ),
         ],
       ),
@@ -94,11 +98,15 @@ class LogScreen extends StatelessWidget {
 
   Widget _buildLogItem({
     required String title,
-    String? content,
-    bool contentIsString = false,
+    String? content
   }) {
-    return content != null && content.trim().isNotEmpty
-        ? Column(
+    Map<String, dynamic>? json;
+    try {
+      json = jsonDecode(content ?? '{}');
+    } catch (e) {
+      json = null;
+    }
+    return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
@@ -114,7 +122,7 @@ class LogScreen extends StatelessWidget {
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
-                    contentIsString
+                    json != null
                         ? TextButton(
                             onPressed: () => _copyClipboard(content),
                             child: const Text(
@@ -122,10 +130,10 @@ class LogScreen extends StatelessWidget {
                               style: TextStyle(color: Colors.white),
                             ),
                           )
-                        : jsonDecode(content)['logID'] != null
+                        : json?['logID'] != null
                             ? TextButton(
                                 onPressed: () => _copyClipboard(
-                                    jsonDecode(content)['logID']),
+                                    json?['logID']),
                                 child: const Text(
                                   'Copy LogId',
                                   style: TextStyle(color: Colors.white),
@@ -144,10 +152,9 @@ class LogScreen extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(8),
-                child: Text(content),
+                child: Text(json != null ? jsonEncode(json) : content ?? ''),
               ),
             ],
-          )
-        : const SizedBox.shrink();
+          );
   }
 }

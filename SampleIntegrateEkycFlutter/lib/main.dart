@@ -24,7 +24,10 @@ class SampleIntegrateEkycApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: 'Tích hợp SDK VNPT eKYC'),
+      home: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: const MyHomePage(title: 'Tích hợp SDK VNPT eKYC'),
+      ),
     );
   }
 }
@@ -46,6 +49,13 @@ class _MyHomePageState extends State<MyHomePage> {
   static final String _tokenId = dotenv.env['TOKEN_ID'] ?? '';
   static final String _tokenKey = dotenv.env['TOKEN_KEY'] ?? '';
   static final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+  String _hashFrontOcr = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _hashFrontOcr =  '';
+  }
 
   _navigateToLog(Map<String, dynamic> json) {
     if (json.isNotEmpty) {
@@ -73,7 +83,27 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
+            //Label HASH_FRONT_OCR_FROM_OCR_FRONT_RESULT
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Hash image front from OCR front result',
+              ),
+              onChanged: (value) => setState(() => _hashFrontOcr = value),
+            ),
+                ],
+              ),
+            ),
+            Spacer(),
             _buildButton(
               title: 'eKYC luồng đầy đủ',
               onPressed: () async {
@@ -141,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accessToken: _accessToken,
                     tokenId: _tokenId,
                     tokenKey: _tokenKey,
-                    hashFrontOcr: '<HASH_FRONT_OCR_FROM_OCR_FRONT_RESULT>',
+                    hashFrontOcr: _hashFrontOcr,
                   );
                   _navigateToLog(await _ekyc.startEkycOcrBack(config));
                 } on PlatformException catch (e) {
@@ -161,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     accessToken: _accessToken,
                     tokenId: _tokenId,
                     tokenKey: _tokenKey,
-                    hashImageCompare: '<HASH_FRONT_OCR_FROM_OCR_FRONT_RESULT>',
+                    hashImageCompare: _hashFrontOcr,
                   );
                   _navigateToLog(await _ekyc.startEkycFace(config));
                 } on PlatformException catch (e) {
@@ -192,6 +222,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
