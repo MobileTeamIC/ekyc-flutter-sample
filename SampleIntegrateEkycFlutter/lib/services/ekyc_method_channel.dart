@@ -9,6 +9,9 @@ class EkycMethodChannel {
       MethodChannel('flutter.sdk.ekyc/integrate');
 
   const EkycMethodChannel();
+  static const  EkycMethodChannel _instance = EkycMethodChannel();
+
+static EkycMethodChannel get instance => _instance;
 
   /// Start full eKYC flow (OCR + Face verification)
   Future<Map<String, dynamic>> startEkycFull(EkycConfig config) async {
